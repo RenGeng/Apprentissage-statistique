@@ -1,5 +1,5 @@
 from data import *
 
 test = Data()
-print(type(test.labels))
-test.matrice_corr()
+# print(test.labels.value_counts().sort_index().values)
+test.boxplot()
