@@ -9,6 +9,8 @@ from sklearn.metrics.scorer import make_scorer
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.cluster import KMeans
 
 def make_plot(element):
 	""" 
@@ -40,7 +42,9 @@ metrics = {'prec_macro': 'precision_macro',
 
 model = [
 	('KNN',KNeighborsClassifier()),
-	('Arbre décisionnel',DecisionTreeClassifier())
+	('Arbre décisionnel',DecisionTreeClassifier()),
+	('Random Forest', RandomForestClassifier())
+	#('Kmeans', KMeans())
 ]
 
 
@@ -118,7 +122,7 @@ for i in range(0,len(list_plot),2):
 	make_plot(list_plot[i+1])
 	plt.show()
 
-	input("Appuyer sur un boutton pour afficher la suite...")
+	input("Appuyer sur un bouton pour afficher la suite...")
 
 
 # Comparer accuracy avec truc normal pour voir si c'est égal ou non
