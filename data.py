@@ -66,7 +66,8 @@ class Data:
 			""" On fait d'abord un sous échantillonnage puis un sur échantillonnage"""
 
 			# On enlève 60% pour la classe 2 et on met la classe 1 au même nombre que la classe 2 pour éviter le sur échantillonage
-			x,y = RandomUnderSampler(sampling_strategy={1:113320,2:113320}).fit_resample(self.data, self.labels)
+			# x,y = RandomUnderSampler(sampling_strategy={1:113320,2:113320}).fit_resample(self.data, self.labels)
+			x,y = RandomUnderSampler(sampling_strategy={1:50000,2:50000}).fit_resample(self.data, self.labels)
 			self.data = pandas.DataFrame(x,columns=self.nom_colonne[:-1])
 			self.labels = pandas.Series(y)
 			
@@ -78,12 +79,16 @@ class Data:
 
 
 	############## Analyse ##############
-	def proportion(self):
+	def proportion(self, plot_all=False):
+		plt.figure()
 		plt.bar(range(1,8),self.labels.value_counts().sort_index().values)
 		plt.title("Nombre d'individu selon la classe")
-		plt.show()
+		if not plot_all:
+			plt.show()
 
-	def matrice_corr(self):
+
+	def matrice_corr(self, plot_all=False):
+		plt.figure()
 		corr = self.data.loc[:,self.nom_colonne[:10]].corr()
 		corr = abs(corr) # car des nombres négatifs
 
@@ -92,9 +97,41 @@ class Data:
 		sns.axes_style("white")
 		sns.heatmap(corr, mask=np.zeros_like(corr), cmap=sns.diverging_palette(220, 10, as_cmap=True),
             square=True, xticklabels=corr.columns, yticklabels=corr.columns,annot=True)
+		plt.tight_layout()
+		if not plot_all:
+			plt.show()
 
+	def boxplot(self, plot_all=False):
+		plt.figure()
+		temp_data = self.complete_data.loc[:,self.nom_colonne[:10]]
+
+		wilderness = self.complete_data.loc[:,self.nom_colonne[10:14]]
+		wilderness = [np.argmax(i,axis=None,out=None) for i in np.array(wilderness)]
+
+		soil = self.complete_data.loc[:,self.nom_colonne[14:-1]]
+		soil = [np.argmax(i,axis=None,out=None) for i in np.array(soil)] # va de 0 à 39
+
+		temp_data["wilderness_area"] = wilderness
+		temp_data["soil_type"] = soil
+		temp_data["Cover_type"] = self.labels
+
+		for index, nom_colonne in enumerate(list(temp_data)[:-1]):
+			graphe_pos = plt.subplot(3,4,index+1)
+			# graphe_pos.get_xaxis().set_visible(False)
+			graphe_pos.get_xaxis().set_ticklabels([])
+			graphe = temp_data.boxplot(column = nom_colonne, by = "Cover_type", ax = graphe_pos)
+
+			plt.subplots_adjust(hspace = 0.5)
+		# ax = sns.boxplot(data=pandas.melt(self.data),dodge=False)
+		plt.tight_layout()
+		if not plot_all:
+			plt.show()
+
+	def plot_all(self):
+		self.proportion(True)
+		self.matrice_corr(True)
+		self.boxplot(True)
 		plt.show()
-
 
 	def ACP(self):
 		data_norme = StandardScaler().fit_transform(self.data.iloc[:,:10])
@@ -124,27 +161,4 @@ class Data:
 
 		cercle = plt.Circle((0,0),1,color='blue',fill=False)
 		axes.add_artist(cercle)
-		plt.show()
-
-	def boxplot(self):
-		temp_data = self.complete_data.loc[:,self.nom_colonne[:10]]
-
-		wilderness = self.complete_data.loc[:,self.nom_colonne[10:14]]
-		wilderness = [np.argmax(i,axis=None,out=None) for i in np.array(wilderness)]
-
-		soil = self.complete_data.loc[:,self.nom_colonne[14:-1]]
-		soil = [np.argmax(i,axis=None,out=None) for i in np.array(soil)] # va de 0 à 39
-
-		temp_data["wilderness_area"] = wilderness
-		temp_data["soil_type"] = soil
-		temp_data["Cover_type"] = self.labels
-
-		for index, nom_colonne in enumerate(list(temp_data)[:-1]):
-			graphe_pos = plt.subplot(3,4,index+1)
-			# graphe_pos.get_xaxis().set_visible(False)
-			graphe_pos.get_xaxis().set_ticklabels([])
-			graphe = temp_data.boxplot(column = nom_colonne, by = "Cover_type", ax = graphe_pos)
-
-			plt.subplots_adjust(hspace = 0.5)
-		# ax = sns.boxplot(data=pandas.melt(self.data),dodge=False)
 		plt.show()
