@@ -1,6 +1,5 @@
 
 from data import Data
-from utils import *
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
@@ -23,6 +22,7 @@ def make_plot(element):
 		plt.plot(longueur,value, label = key, marker="o")
 
 	plt.legend(loc='upper left')
+	plt.xlabel('Nombre de paramètres')
 	plt.title(nom, fontsize=12, fontweight='bold')
 	plt.subplots_adjust(hspace = 1)
 

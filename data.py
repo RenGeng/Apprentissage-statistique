@@ -52,13 +52,13 @@ class Data:
 		"""
 		if sampling_type == 'over':
 			""" Equilibre tous les classes sur un nomrbe d'individu identique """
-			x, y = SMOTE().fit_resample(self.data, self.labels)
+			x, y = SMOTE(random_state=0).fit_resample(self.data, self.labels)
 			self.data = pandas.DataFrame(x,columns=self.nom_colonne[:-1])
 			self.labels = pandas.Series(y)
 
 		elif sampling_type == 'under':
 			""" Sous échantillonne les grosses classes jusqu'à avoir le même nombre que la classe minoritaire"""
-			x,y = RandomUnderSampler().fit_resample(self.data, self.labels)
+			x,y = RandomUnderSampler(random_state=0).fit_resample(self.data, self.labels)
 			self.data = pandas.DataFrame(x,columns=self.nom_colonne[:-1])
 			self.labels = pandas.Series(y)
 
@@ -67,11 +67,11 @@ class Data:
 
 			# On enlève 60% pour la classe 2 et on met la classe 1 au même nombre que la classe 2 pour éviter le sur échantillonage
 			# x,y = RandomUnderSampler(sampling_strategy={1:113320,2:113320}).fit_resample(self.data, self.labels)
-			x,y = RandomUnderSampler(sampling_strategy={1:50000,2:50000}).fit_resample(self.data, self.labels)
+			x,y = RandomUnderSampler(random_state=0,sampling_strategy={1:50000,2:50000}).fit_resample(self.data, self.labels)
 			self.data = pandas.DataFrame(x,columns=self.nom_colonne[:-1])
 			self.labels = pandas.Series(y)
 			
-			x, y = SMOTE().fit_resample(self.data, self.labels)
+			x, y = SMOTE(random_state=0).fit_resample(self.data, self.labels)
 			self.data = pandas.DataFrame(x,columns=self.nom_colonne[:-1])
 			self.labels = pandas.Series(y)
 		else:
@@ -123,7 +123,6 @@ class Data:
 
 			plt.subplots_adjust(hspace = 0.5)
 		# ax = sns.boxplot(data=pandas.melt(self.data),dodge=False)
-		plt.tight_layout()
 		if not plot_all:
 			plt.show()
 
@@ -138,8 +137,10 @@ class Data:
 
 		acp = PCA(svd_solver='full')
 		coordonnee = acp.fit_transform(data_norme)
-		print(acp.explained_variance_ratio_)
+		# print(acp.explained_variance_ratio_)
 		plt.plot(range(1,len(acp.explained_variance_ratio_)+1), np.cumsum(acp.explained_variance_ratio_))
+		plt.xlabel('Nombre de composants')
+		plt.grid()
 		plt.title("Pourcentage de variance expliqué")
 
 		n = len(self.labels)
@@ -162,3 +163,33 @@ class Data:
 		cercle = plt.Circle((0,0),1,color='blue',fill=False)
 		axes.add_artist(cercle)
 		plt.show()
+
+		return coordonnee
+
+
+if __name__ == '__main__':
+	data = Data()
+	# data.plot_all()
+	data.resample()
+	data.ACP()
+
+
+	from sklearn.pipeline import Pipeline
+	from sklearn.neighbors import KNeighborsClassifier
+	from sklearn.tree import DecisionTreeClassifier
+	from sklearn.ensemble import RandomForestClassifier
+	from sklearn.model_selection import cross_val_score
+
+	pipe1 = Pipeline([('pca', PCA(n_components=10)), # Nombre de composant à garder
+                 ('tree', DecisionTreeClassifier())])
+	print("\n Résultat de l'arbre décisionnel avec 6 composants de ACP\n",cross_val_score(pipe1, data.data, data.labels, cv=5))
+
+	pipe2 = Pipeline([('pca', PCA(n_components=10)), # Nombre de composant à garder
+                 ('knn', KNeighborsClassifier())])
+	print("\nRésultat de KNN avec 6 composants de ACP\n",cross_val_score(pipe2, data.data, data.labels, cv=5))
+
+	pipe3 = Pipeline([('pca', PCA(n_components=10)), # Nombre de composant à garder
+                 ('Random forest', RandomForestClassifier())])
+	print("\nRésultat de random forest avec 6 composants de ACP\n",cross_val_score(pipe3, data.data, data.labels, cv=5))
+
+
